@@ -1,23 +1,49 @@
-#include <LiquidCrystal.h>
-
-// https://cdn-shop.adafruit.com/product-files/181/p181.pdf
-const int rs = 7, en = 8, d4 = 9, d5 = 10, d6 = 11, d7 = 12;
-LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+const float fullCharge = 12.8;
+const int ledPin = 13;
 
 // Specify the resistors and board voltage to use
 const float r1 = 1000000, r2 = 220000;
 const float boardVoltage = 5.0;
 
 void setup() {
-  lcd.begin(16, 2);
-  lcd.print("Starting...");
+  debug("Starting");
+  initDisplay();
+  initLED();
 }
 
 void loop() {
   int sensorValue = analogRead(A0);
   float voltage = calcVoltage(sensorValue);
   displayVoltage(voltage);
-  delay(1000);
+  delay(2000);
+}
+
+void debug(String text) {
+  if (Serial) Serial.println(text);
+}
+
+void initLED() {
+  pinMode(ledPin, OUTPUT);
+}
+
+void setLED(bool on) {
+  digitalWrite(ledPin, on ? HIGH : LOW);
+}
+
+void flashLED(int count) {
+  for (int i = 0; i < count; i++) {
+    setLED(true);
+    delay(100);
+    setLED(false);
+    if (i < count - 1) {
+      delay(100);
+    }
+  }
+}
+
+void initDisplay() {
+  if (!Serial) return;
+  Serial.begin(9600);
 }
 
 float calcVoltage(float sensorValue) {
@@ -25,10 +51,14 @@ float calcVoltage(float sensorValue) {
 }
 
 void displayVoltage(float voltage) {
-  lcd.setCursor(0, 0);
-  lcd.print("Voltage:            ");
-  lcd.setCursor(9, 0);
-  lcd.print(voltage);
+  if (voltage < fullCharge * 0.6) {
+    flashLED(3);
+  } else if (voltage < fullCharge * 0.8) {
+    flashLED(2);
+  } else {
+    flashLED(1);
+  }
+  if (Serial) Serial.println(voltage);
 }
 
 void reportVoltage(float voltage) {
