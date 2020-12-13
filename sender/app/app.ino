@@ -1,8 +1,9 @@
-#include <b64.h>
+// #include <b64.h>
 #include <Ethernet.h>
 #include <HttpClient.h>
 #include <SPI.h>
 #include <WiFi101.h>
+#include "LED.h"
 #include "WiFiCreds.h"
 
 #define DEBUG
@@ -20,33 +21,24 @@
 #define WIFI_RESET 4
 #define WIFI_ENABLE 2
 
-// LED RGB pins
-#define RGB 0b1010000000010000000
-#define RED 0b0000000000010000000
-#define GRN 0b1000000000000000000
-#define BLU 0b0010000000000000000
-#define OFF 0b0000000000000000000
+// LED pins
+#define LED_PIN_R 9
+#define LED_PIN_G 10
+#define LED_PIN_B 11
 
 byte mac[] = { 0xF8, 0xF0, 0x05, 0x94, 0x3D, 0x8B };
 int wifiStatus = WL_IDLE_STATUS;
-int off = 0;
-int red = 1;
-int green = 2;
-int blue = 3;
-int yellow = 4;
-int flashInterval = 100; // ms
-
+LED led(LED_PIN_R, LED_PIN_G, LED_PIN_B);
 
 void setup() {
   Ethernet.init(12); // Avoid conflict with LED pins
   initDebug();
   debug("Starting");
-  initLED();
-  flashLED(blue, 1);
+  led.flash(led.BLUE, 1);
   initEthernet();
-  flashLED(green, 2);
+  led.flash(led.BLUE, 2);
   initWiFi();
-  flashLED(green, 3);
+  led.flash(led.GREEN, 3);
 }
 
 void loop() {
@@ -78,7 +70,7 @@ void initDebug() {
 void initEthernet() {
   while (Ethernet.begin(mac) != 1)
   {
-    flashLED(red, 2);
+    led.flash(led.RED, 2);
     debug("Failed to start ethernet");
     delay(2000);
   }
@@ -99,40 +91,11 @@ void initWiFi() {
     debug(WIFI_SSID);
     wifiStatus = WiFi.begin(WIFI_SSID, WIFI_PASS);
     Serial.println(wifiStatus);
-    flashLED(yellow, 2);
+    led.flash(led.RED | led.GREEN, 2);
     delay(5000);
   }
 
   debug("Connected to WiFi");
-}
-
-void initLED() {
-  PORT->Group[PORTA].DIRSET.reg = RGB;
-}
-
-void flashLED(int color, int count) {
-  for (int i = 0; i < count; i++) {
-    setLED(color);
-    delay(flashInterval);
-    setLED(off);
-    if (i < count - 1) {
-      delay(flashInterval);
-    }
-  }
-}
-
-void setLED(int color)
-{
-  PORT->Group[PORTA].OUTCLR.reg = RGB;
-  if (color == red) {
-    PORT->Group[PORTA].OUTSET.reg = RED;
-  } else if (color == green) {
-    PORT->Group[PORTA].OUTSET.reg = GRN;
-  } else if (color == blue) {
-    PORT->Group[PORTA].OUTSET.reg = BLU;
-  } else if (color == yellow) {
-    PORT->Group[PORTA].OUTSET.reg = RED | GRN;
-  }
 }
 
 float getVoltage() {
@@ -142,11 +105,11 @@ float getVoltage() {
 
 void displayVoltage(float voltage) {
   if (voltage < FULL_CHARGE * 0.6) {
-    flashLED(red, 2);
+    led.flash(led.RED, 2);
   } else if (voltage < FULL_CHARGE * 0.8) {
-    flashLED(yellow, 2);
+    led.flash(led.RED | led.GREEN, 2);
   } else {
-    flashLED(green, 2);
+    led.flash(led.GREEN, 2);
   }
   debug(voltage);
 }
