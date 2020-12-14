@@ -7,29 +7,37 @@ public:
   int BLUE = 3;
   int flashInterval = 200;
 
-  LED(int redPin, int greenPin, int bluePin)
+  void init(int rRed, int rGreen, int rBlue)
   {
     // Create the bitmasks
-    RED = 1 << (redPin - 2);
-    GREEN = 1 << (greenPin - 2);
-    BLUE = 1 << (bluePin - 2);
+    RED = 1 << rRed;
+    GREEN = 1 << rGreen;
+    BLUE = 1 << rBlue;
 
-    // Set pins for output
+    // Set registers for output
     PORT->Group[PORTA].DIRSET.reg = RED | GREEN | BLUE;
   }
 
   void setColor(int color)
   {
-    PORT->Group[PORTA].OUTCLR.reg = RED | GREEN | BLUE;
+    turnOff();
     PORT->Group[PORTA].OUTSET.reg = color;
   }
 
-  void flash(int color, int count) {
-    for (int i = 0; i < count; i++) {
+  void turnOff()
+  {
+    PORT->Group[PORTA].OUTCLR.reg = RED | GREEN | BLUE;
+  }
+
+  void flash(int color, int count)
+  {
+    for (int i = 0; i < count; i++)
+    {
       setColor(color);
       delay(flashInterval);
-      setColor(OFF);
-      if (i < count - 1) {
+      turnOff();
+      if (i < count - 1)
+      {
         delay(flashInterval);
       }
     }
