@@ -1,6 +1,3 @@
-// #include <b64.h>
-#include <Ethernet.h>
-// #include <HttpClient.h>
 #include <SPI.h>
 #include <WiFi101.h>
 #include "Config.h"
@@ -19,18 +16,11 @@ void setup()
   logger.init();
   logger.print("Starting");
 
-  // Ethernet.init(12); // Avoid conflict with LED pins
-
+  // Blue light at startup
   led.init(LED_REG_R, LED_REG_G, LED_REG_B);
   led.flash(led.BLUE, 3);
 
-  // led.flash(led.RED, 1);
-  // delay(500);
-  // led.flash(led.GREEN, 1);
-  // delay(500);
-  // led.flash(led.BLUE, 1);
-  // delay(2000);
-
+  // Red light while wifi is connecting
   initWiFi();
   while (!connectWiFi())
   {
@@ -38,6 +28,7 @@ void setup()
     delay(2000);
   }
 
+  // Green when ready to go
   led.flash(led.GREEN, 3);
 }
 
@@ -102,32 +93,20 @@ void displayVoltage(float voltage)
 
 void reportVoltage(float voltage)
 {
-  logger.print("TODO: Report voltage 2");
-  return;
-
-  // EthernetClient c;
-  // HttpClient http(c);
-
-  // int err = 0;
-
-  // err = http.get("www.arduino.cc", "/asciilogo.txt");
-  // if (err == 0)
+  // if (client.connect("www.google.com", 80))
   // {
-  //   logger.print("startedRequest ok");
+  //   Serial.println("connected to server");
+  //   client.println("GET /search?q=arduino HTTP/1.1");
+  //   client.println("Host: www.google.com");
+  //   client.println("Connection: close");
+  //   client.println();
 
-  //   err = http.responseStatusCode();
-  //   if (err >= 0)
+  //   delay(1000);
+
+  //   while (client.available())
   //   {
-  //     Serial.print("Got status code: ");
-  //     Serial.println(err);
+  //     char c = client.read();
+  //     Serial.write(c);
   //   }
   // }
-
-  //  HttpClient client;
-  //  client.get("http://www.arduino.cc/asciilogo.txt");
-  //  while (client.available()) {
-  //    char c = client.read();
-  //    Serial.print(c);
-  //  }
-  //  Serial.flush();
 }
