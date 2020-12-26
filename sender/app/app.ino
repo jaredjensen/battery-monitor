@@ -8,6 +8,7 @@ byte mac[] = {0xF8, 0xF0, 0x05, 0x94, 0x3D, 0x8B};
 int wifiStatus = WL_IDLE_STATUS;
 Logger logger;
 LED led;
+int flashInterval = 200;
 
 WiFiClient client;
 
@@ -17,7 +18,7 @@ void setup()
   logger.print("Starting");
 
   // Blue light at startup
-  led.init(LED_REG_R, LED_REG_G, LED_REG_B);
+  led.init(LED_REG_R, LED_REG_G, LED_REG_B, flashInterval);
   led.flash(led.BLUE, 3);
 
   // Red light while wifi is connecting
@@ -30,6 +31,7 @@ void setup()
 
   // Green when ready to go
   led.flash(led.GREEN, 3);
+  delay(2000);
 }
 
 void loop()
@@ -93,20 +95,44 @@ void displayVoltage(float voltage)
 
 void reportVoltage(float voltage)
 {
-  // if (client.connect("www.google.com", 80))
-  // {
-  //   Serial.println("connected to server");
-  //   client.println("GET /search?q=arduino HTTP/1.1");
-  //   client.println("Host: www.google.com");
-  //   client.println("Connection: close");
-  //   client.println();
+  char route[80];
+  sprintf(route, "POST %s HTTP/1.1", REMOTE_PATH);
+  char data[80];
+  sprintf(data, "{\"voltage\":%f}", voltage);
 
-  //   delay(1000);
+  logger.print("Attempting to send");
+  logger.print(data);
 
-  //   while (client.available())
-  //   {
-  //     char c = client.read();
-  //     Serial.write(c);
-  //   }
-  // }
+  if (client.connectSSL(REMOTE_HOST, REMOTE_PORT))
+  {
+    client.println(route);
+    client.print("host: ");
+    client.println(REMOTE_HOST);
+    client.print("x-api-key: ");
+    client.println(REMOTE_API_KEY);
+    client.println("connection: close");
+    client.println("content-type: application/json");
+    client.print("content-length: ");
+    client.println(strlen(data));
+    client.println();
+    client.print(data);
+
+    delay(1000);
+
+#ifdef DEBUG
+    while (client.available())
+    {
+      char c = client.read();
+      Serial.write(c);
+    }
+#endif
+
+    if (client.connected()) { 
+      client.stop();
+    }
+
+    led.sequence(led.BLUE, led.GREEN);
+  } else {
+    led.sequence(led.BLUE, led.RED);
+  }
 }

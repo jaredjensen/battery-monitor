@@ -4,6 +4,12 @@
 #define WIFI_SSID "my-ssid"
 #define WIFI_PASS "password"
 
+// Remote config
+#define REMOTE_API_KEY "secret"
+#define REMOTE_HOST "foo.com"
+#define REMOTE_PATH "/voltage"
+#define REMOTE_PORT 443
+
 // Battery settings
 #define FULL_CHARGE 9
 #define CHECK_INTERVAL 2000
