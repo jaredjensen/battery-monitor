@@ -30,3 +30,12 @@ After startup, the unit will sample the battery voltage on an interval and attem
 | Red, Red       | <60% voltage                  |
 | Blue, Green    | Successfully reported voltage |
 | Blue, Red      | Failed to report voltage      |
+
+## Feather M0 WiFi Firmware Update
+
+1. Open the sketch Examples > WiFi101 > FirmwareUpdater
+2. Add `WiFi.setPins(8,7,4,2);` in `setup()` after the serial port is initialized
+3. Upload the sketch
+4. Go to Tools > WiFi101 / WiFiNINA Firmware Updater
+5. Select port and click Test Connection
+6. Select firmware and click Update Firmware

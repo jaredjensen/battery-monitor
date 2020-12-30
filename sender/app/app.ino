@@ -4,13 +4,12 @@
 #include "LED.h"
 #include "Logger.h"
 
-byte mac[] = {0xF8, 0xF0, 0x05, 0x94, 0x3D, 0x8B};
 int wifiStatus = WL_IDLE_STATUS;
 Logger logger;
 LED led;
 int flashInterval = 200;
 
-WiFiClient client;
+WiFiSSLClient client;
 
 void setup()
 {
@@ -28,6 +27,10 @@ void setup()
     led.flash(led.RED, 3);
     delay(2000);
   }
+
+#ifdef DEBUG
+  printWifiStatus();
+#endif
 
   // Green when ready to go
   led.flash(led.GREEN, 3);
@@ -58,9 +61,8 @@ void initWiFi()
 
 bool connectWiFi()
 {
-  char msg[50];
-  strcpy(msg, "Attempting to connect to ");
-  strcat(msg, WIFI_SSID);
+  char msg[80];
+  sprintf(msg, "Attempting to connect to %s", WIFI_SSID);
   logger.print(msg);
   if (WL_CONNECTED == WiFi.begin(WIFI_SSID, WIFI_PASS))
   {
@@ -90,49 +92,91 @@ void displayVoltage(float voltage)
   {
     led.flash(led.GREEN, 2);
   }
-  logger.print(voltage);
+
+  char dbg[80];
+  sprintf(dbg, "Read voltage %f", voltage);
+  logger.print(dbg);
 }
 
 void reportVoltage(float voltage)
 {
-  char route[80];
-  sprintf(route, "POST %s HTTP/1.1", REMOTE_PATH);
-  char data[80];
-  sprintf(data, "{\"voltage\":%f}", voltage);
-
-  logger.print("Attempting to send");
-  logger.print(data);
-
-  if (client.connectSSL(REMOTE_HOST, REMOTE_PORT))
+  uint8_t max_retries = 0;
+  while (true)
   {
-    client.println(route);
-    client.print("host: ");
-    client.println(REMOTE_HOST);
-    client.print("x-api-key: ");
-    client.println(REMOTE_API_KEY);
-    client.println("connection: close");
-    client.println("content-type: application/json");
-    client.print("content-length: ");
-    client.println(strlen(data));
-    client.println();
-    client.print(data);
+    client.connect(REMOTE_HOST, REMOTE_PORT);
 
-    delay(1000);
+    if (client.connected())
+    {
+      break;
+    }
+
+    led.sequence(led.BLUE, led.RED);
+
+    if (++max_retries > 5)
+    {
+      logger.print("Could not connect to server");
+      return;
+    }
+
+    delay(2000);
+  }
+
+  char body[30];
+  sprintf(body, "{\"voltage\":%f}", voltage);
+
+  char request[1000];
+  sprintf(request, "POST %s HTTP/1.1\r\n", REMOTE_PATH);
+  sprintf(request, "%sconnection: close\r\n", request);
+  sprintf(request, "%scontent-length: %u\r\n", request, strlen(body));
+  sprintf(request, "%scontent-type: application/json\r\n", request);
+  sprintf(request, "%shost: %s\r\n", request, REMOTE_HOST);
+  sprintf(request, "%sx-api-key: %s\r\n", request, REMOTE_API_KEY);
+  sprintf(request, "%s\r\n%s", request, body);
+  client.print(request);
+
+  logger.print(request);
+
+  delay(1000);
 
 #ifdef DEBUG
-    while (client.available())
-    {
-      char c = client.read();
-      Serial.write(c);
-    }
+  while (client.available())
+  {
+    char c = client.read();
+    Serial.write(c);
+  }
 #endif
 
-    if (client.connected()) { 
-      client.stop();
-    }
+  client.stop();
+  led.sequence(led.BLUE, led.GREEN);
+}
 
-    led.sequence(led.BLUE, led.GREEN);
-  } else {
-    led.sequence(led.BLUE, led.RED);
-  }
+void printWifiStatus() {
+  // print the SSID of the network you're attached to:
+  Serial.print("Successfully Connected to Network with SSID: ");
+  Serial.print(WiFi.SSID());
+
+  String fv = WiFi.firmwareVersion();
+  Serial.print("  Firmware Version: ");
+  Serial.println(fv);
+
+  // print Board's Local IP address:
+  IPAddress ip = WiFi.localIP();
+  Serial.print("  Local IP Address: ");
+  Serial.println(ip);
+
+  // print Board's Gateway IP address:
+  IPAddress gwip = WiFi.gatewayIP();
+  Serial.print("  Gateway IP Address: ");
+  Serial.println(gwip);
+ 
+  // print the received signal strength:
+  long rssi = WiFi.RSSI();
+  Serial.print("  signal strength (RSSI): ");
+  Serial.print(rssi);
+  Serial.println(" dBm");
+
+  int encryptionType = WiFi.encryptionType();
+  Serial.print("  encryption type: ");
+  Serial.print(encryptionType);
+  Serial.println(" (TKIP (WPA)=2,WEP=5,CCMP (WPA)=4,NONE=7,AUTO=8)"); 
 }
