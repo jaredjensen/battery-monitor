@@ -1,5 +1,12 @@
 # Battery Monitor
 
+[Overview](#overview)  
+[Operation](#operation)  
+[WiFi Firmware Update](#wifi-firmware-update)  
+[Shield Design](#shield-design)
+
+## Overview
+
 This project is a battery monitor that reports a battery's current voltage on a regular interval to a remote API that can capture trends, send alerts, etc. It contains two components:
 
 | Component | Purpose                          |
@@ -31,7 +38,7 @@ After startup, the unit will sample the battery voltage on an interval and attem
 | Blue, Green    | Successfully reported voltage |
 | Blue, Red      | Failed to report voltage      |
 
-## Feather M0 WiFi Firmware Update
+## WiFi Firmware Update
 
 1. Open the sketch Examples > WiFi101 > FirmwareUpdater
 2. Add `WiFi.setPins(8,7,4,2);` in `setup()` after the serial port is initialized
@@ -39,3 +46,7 @@ After startup, the unit will sample the battery voltage on an interval and attem
 4. Go to Tools > WiFi101 / WiFiNINA Firmware Updater
 5. Select port and click Test Connection
 6. Select firmware and click Update Firmware
+
+## Shield Design
+
+![Shield](./docs/shield.jpg)

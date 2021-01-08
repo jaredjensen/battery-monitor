@@ -23,7 +23,7 @@
 #define WIFI_RESET 4
 #define WIFI_ENABLE 2
 
-// LED pins
+// LED registers
 #define LED_PIN_R 9
 #define LED_PIN_G 10
 #define LED_PIN_B 11
