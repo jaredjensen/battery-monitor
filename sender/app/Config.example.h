@@ -24,6 +24,7 @@
 #define WIFI_ENABLE 2
 
 // LED registers
-#define LED_PIN_R 9
-#define LED_PIN_G 10
-#define LED_PIN_B 11
+// See assignments on pinout (e.g. https://cdn-learn.adafruit.com/assets/assets/000/046/250/original/feather_m0_wifi_pinout_v1.2-1.png?1504885927)
+#define LED_REG_R 7
+#define LED_REG_G 18
+#define LED_REG_B 16
